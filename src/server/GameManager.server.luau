@@ -47,3 +47,49 @@ end
 for _, entry in ipairs(Config.ORE_SPAWN_POSITIONS) do
 	spawnOre(entry.position, entry.oreType)
 end
+
+-- MineEvent handler
+local lastMineTimes = {} -- [player.UserId] = os.clock() of last successful mine
+
+MineEvent.OnServerEvent:Connect(function(player, orePart)
+	print("MineEvent received from", player.Name, "targeting", orePart and orePart.Name or "nil")
+	-- Guard: part must still exist and be mineable
+	if not orePart or not orePart.Parent then return end
+	if not orePart:GetAttribute("IsMineable") then return end
+
+	-- Guard: player must have a character in the world
+	local character = player.Character
+	if not character then return end
+	local rootPart = character:FindFirstChild("HumanoidRootPart")
+	if not rootPart then return end
+
+	-- Validate distance
+	local distance = (rootPart.Position - orePart.Position).Magnitude
+	if distance > Config.MINE_REACH then return end
+
+	-- Validate cooldown
+	local now = os.clock()
+	local lastMine = lastMineTimes[player.UserId] or 0
+	if (now - lastMine) < Config.MINE_COOLDOWN then return end
+	lastMineTimes[player.UserId] = now
+
+	-- Apply damage
+	local hp = orePart:GetAttribute("HP") - 1
+	if hp > 0 then
+		orePart:SetAttribute("HP", hp)
+		return
+	end
+
+	-- HP reached 0 — break the ore
+	local oreType = orePart:GetAttribute("OreType")
+	local position = orePart.Position
+
+	orePart:Destroy()
+
+	-- Award coins
+	local coins = player.leaderstats.Coins
+	coins.Value = coins.Value + OreTypes[oreType].coins
+
+	-- Schedule respawn
+	task.delay(Config.RESPAWN_DELAY, spawnOre, position, oreType)
+end)
