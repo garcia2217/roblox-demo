@@ -1,5 +1,8 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
+
+local playerDB = DataStoreService:GetDataStore("PlayerData_v1")
 
 local Config = require(ReplicatedStorage.Shared.Config)
 local OreTypes = require(ReplicatedStorage.Shared.OreTypes)
@@ -11,19 +14,57 @@ local MineEvent = Instance.new("RemoteEvent")
 MineEvent.Name = "MineEvent"
 MineEvent.Parent = Events
 
--- Leaderstats
-local function setupLeaderstats(player)
+-- DataStore helpers
+local function saveData(player)
+	local coins = player.leaderstats and player.leaderstats:FindFirstChild("Coins")
+	if not coins then return end
+
+	local success, err = pcall(function()
+		playerDB:SetAsync("player_" .. player.UserId, coins.Value)
+	end)
+
+	if not success then
+		warn("Failed to save data for", player.Name, ":", err)
+	end
+end
+
+local function loadData(player)
+	local success, result = pcall(function()
+		return playerDB:GetAsync("player_" .. player.UserId)
+	end)
+
+	if success then
+		return result or 0
+	else
+		warn("Failed to load data for", player.Name, ":", result)
+		return 0
+	end
+end
+
+-- Leaderstats + data load
+local function onPlayerAdded(player)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
 	leaderstats.Parent = player
 
 	local coins = Instance.new("IntValue")
 	coins.Name = "Coins"
-	coins.Value = 0
+	coins.Value = loadData(player)
 	coins.Parent = leaderstats
 end
 
-Players.PlayerAdded:Connect(setupLeaderstats)
+Players.PlayerAdded:Connect(onPlayerAdded)
+Players.PlayerRemoving:Connect(saveData)
+
+-- Auto-save loop
+task.spawn(function()
+	while true do
+		task.wait(Config.AUTOSAVE_INTERVAL)
+		for _, player in ipairs(Players:GetPlayers()) do
+			saveData(player)
+		end
+	end
+end)
 
 -- Ore spawning
 local function spawnOre(position, oreType)
