@@ -93,7 +93,6 @@ end
 local lastMineTimes = {} -- [player.UserId] = os.clock() of last successful mine
 
 MineEvent.OnServerEvent:Connect(function(player, orePart)
-	print("MineEvent received from", player.Name, "targeting", orePart and orePart.Name or "nil")
 	-- Guard: part must still exist and be mineable
 	if not orePart or not orePart.Parent then return end
 	if not orePart:GetAttribute("IsMineable") then return end
@@ -115,14 +114,26 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	lastMineTimes[player.UserId] = now
 
 	-- Apply damage
+	local oreType = orePart:GetAttribute("OreType")
 	local hp = orePart:GetAttribute("HP") - 1
+
+	-- Hit flash
+	local originalColor = orePart.BrickColor
+	orePart.BrickColor = BrickColor.new("White")
+	task.delay(0.1, function()
+		if orePart and orePart.Parent then
+			orePart.BrickColor = originalColor
+		end
+	end)
+
 	if hp > 0 then
 		orePart:SetAttribute("HP", hp)
+		-- HP transparency: gets more transparent as ore weakens
+		orePart.Transparency = (1 - hp / OreTypes[oreType].hp) * 0.5
 		return
 	end
 
 	-- HP reached 0 — break the ore
-	local oreType = orePart:GetAttribute("OreType")
 	local position = orePart.Position
 
 	orePart:Destroy()
