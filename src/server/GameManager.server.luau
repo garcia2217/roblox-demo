@@ -24,3 +24,26 @@ local function setupLeaderstats(player)
 end
 
 Players.PlayerAdded:Connect(setupLeaderstats)
+
+-- Ore spawning
+local function spawnOre(position, oreType)
+	local data = OreTypes[oreType]
+
+	local part = Instance.new("Part")
+	part.Name = "OreNode"
+	part.Size = Vector3.new(2, 2, 2)
+	part.Anchored = true
+	part.BrickColor = data.color
+	part.Material = Enum.Material.SmoothPlastic
+
+	part:SetAttribute("IsMineable", true)
+	part:SetAttribute("OreType", oreType)
+	part:SetAttribute("HP", data.hp)
+
+	part.Position = position
+	part.Parent = workspace
+end
+
+for _, entry in ipairs(Config.ORE_SPAWN_POSITIONS) do
+	spawnOre(entry.position, entry.oreType)
+end
