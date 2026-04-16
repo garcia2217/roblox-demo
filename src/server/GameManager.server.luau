@@ -22,6 +22,14 @@ local FloatingCoinsEvent = Instance.new("RemoteEvent")
 FloatingCoinsEvent.Name = "FloatingCoinsEvent"
 FloatingCoinsEvent.Parent = Events
 
+local RoundStateEvent = Instance.new("RemoteEvent")
+RoundStateEvent.Name = "RoundStateEvent"
+RoundStateEvent.Parent = Events
+
+local RoundResultsEvent = Instance.new("RemoteEvent")
+RoundResultsEvent.Name = "RoundResultsEvent"
+RoundResultsEvent.Parent = Events
+
 -- DataStore helpers
 local function saveData(player)
 	local coins = player.leaderstats and player.leaderstats:FindFirstChild("Coins")
