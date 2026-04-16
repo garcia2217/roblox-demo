@@ -9,6 +9,7 @@ local camera = workspace.CurrentCamera
 local player = Players.LocalPlayer
 
 local MineEvent = ReplicatedStorage.Events:WaitForChild("MineEvent")
+local playerGui = player:WaitForChild("PlayerGui")
 
 -- Hover highlight
 local selectionBox = Instance.new("SelectionBox")
@@ -98,15 +99,25 @@ local function tryMineAtScreenPos(screenPos)
 end
 
 UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-
 	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		if gameProcessed then return end
 		tryMineAtScreenPos(UserInputService:GetMouseLocation())
+
 	elseif input.UserInputType == Enum.UserInputType.Touch then
-		-- input.Position is a Vector3 where X, Y are screen coordinates
-		tryMineAtScreenPos(Vector2.new(input.Position.X, input.Position.Y))
+		local touchPos = Vector2.new(input.Position.X, input.Position.Y)
+		local guiHits = playerGui:GetGuiObjectsAtPosition(touchPos.X, touchPos.Y)
+		local realHit = false
+		for _, obj in guiHits do
+			if not obj:IsDescendantOf(playerGui:FindFirstChild("TouchGui")) then
+				realHit = true
+				break
+			end
+		end
+		if realHit then return end
+		tryMineAtScreenPos(UserInputService:GetMouseLocation())
+
 	elseif input.UserInputType == Enum.UserInputType.Gamepad1 then
-		-- R2 (trigger) or A button — aim at screen center
+		if gameProcessed then return end
 		if input.KeyCode == Enum.KeyCode.ButtonR2 or input.KeyCode == Enum.KeyCode.ButtonA then
 			local viewport = camera.ViewportSize
 			tryMineAtScreenPos(Vector2.new(viewport.X / 2, viewport.Y / 2))
