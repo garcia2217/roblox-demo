@@ -14,6 +14,14 @@ local MineEvent = Instance.new("RemoteEvent")
 MineEvent.Name = "MineEvent"
 MineEvent.Parent = Events
 
+local CoinSoundEvent = Instance.new("RemoteEvent")
+CoinSoundEvent.Name = "CoinSoundEvent"
+CoinSoundEvent.Parent = Events
+
+local FloatingCoinsEvent = Instance.new("RemoteEvent")
+FloatingCoinsEvent.Name = "FloatingCoinsEvent"
+FloatingCoinsEvent.Parent = Events
+
 -- DataStore helpers
 local function saveData(player)
 	local coins = player.leaderstats and player.leaderstats:FindFirstChild("Coins")
@@ -65,6 +73,19 @@ task.spawn(function()
 		end
 	end
 end)
+
+-- Plays a sound at a position in the world, heard by all nearby players.
+-- Uses Debris to auto-clean up the Sound instance after it finishes.
+local Debris = game:GetService("Debris")
+local function playWorldSound(soundId, parent, volume)
+	local sound = Instance.new("Sound")
+	sound.SoundId = soundId
+	sound.Volume = volume or 1
+	sound.RollOffMaxDistance = 60
+	sound.Parent = parent
+	sound:Play()
+	Debris:AddItem(sound, 5)
+end
 
 -- Ore spawning
 local function spawnOre(position, oreType)
@@ -251,6 +272,7 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 
 	-- Hit effects
 	emitHitParticles(orePart, oreType)
+	playWorldSound(Config.SOUNDS.OreHit, orePart)
 	local originalColor = orePart.BrickColor
 	orePart.BrickColor = BrickColor.new("White")
 	task.delay(0.1, function()
@@ -269,11 +291,25 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	-- HP reached 0 — break the ore
 	local position = orePart.Position
 
+	-- Play break sound at the ore's position before destroying it
+	local breakSound = Instance.new("Sound")
+	breakSound.SoundId = Config.SOUNDS.OreBreak
+	breakSound.Volume = 1
+	breakSound.Parent = workspace
+	breakSound.RollOffMaxDistance = 60
+	breakSound:Play()
+	Debris:AddItem(breakSound, 5)
+
 	orePart:Destroy()
 
 	-- Award coins
+	local coinAmount = OreTypes[oreType].coins
 	local coins = player.leaderstats.Coins
-	coins.Value = coins.Value + OreTypes[oreType].coins
+	coins.Value = coins.Value + coinAmount
+
+	-- Notify clients: coin sound (mining player only) + floating text (everyone)
+	CoinSoundEvent:FireClient(player)
+	FloatingCoinsEvent:FireAllClients(position, coinAmount, oreType)
 
 	-- Schedule respawn
 	task.delay(Config.RESPAWN_DELAY, function()

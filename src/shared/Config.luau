@@ -13,4 +13,11 @@ Config.AUTOSAVE_INTERVAL = 60 -- seconds between periodic saves
 -- How many ores to place at game start (server picks this many at random each run)
 Config.ORE_SPAWN_COUNT = 10
 
+-- Sound asset IDs (replace with your own from the Creator Marketplace if desired)
+Config.SOUNDS = {
+	OreHit   = "rbxassetid://9119713951", -- rock impact
+	OreBreak = "rbxassetid://104934835352245", -- rock crumble/break
+	CoinPickup = "rbxassetid://4590662766", -- coin chime
+}
+
 return Config
