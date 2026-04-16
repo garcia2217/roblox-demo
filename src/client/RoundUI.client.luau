@@ -114,6 +114,10 @@ local function startCountdown(seconds, labelFn)
 	end)
 end
 
+-- Track current phase so we can restore UI when the welcome screen closes
+local currentState = nil
+local phaseEndClientTime = 0  -- os.clock() timestamp when this phase ends
+
 -- Helper: clear and rebuild scoreboard rows from ranked results table
 local function populateScoreboard(results)
 	-- Remove old rows
@@ -168,24 +172,30 @@ local function populateScoreboard(results)
 	end
 end
 
--- State handler
-RoundStateEvent.OnClientEvent:Connect(function(state, seconds)
-	-- Reset visibility
+-- Applies a state to the UI. Called by the event handler and again when the
+-- welcome screen closes (with recomputed remaining seconds).
+local function applyState(state, seconds)
 	topBar.Visible = false
 	scoreboard.Visible = false
 	timerKey = timerKey + 1 -- cancel any running countdown
 
+	local welcomeOpen = playerGui:FindFirstChild("WelcomeScreen") ~= nil
+
 	if state == "Lobby" then
-		topBar.Visible = true
-		topLabel.Text = "Waiting for round..."
-		topLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		if not welcomeOpen then
+			topBar.Visible = true
+			topLabel.Text = "Waiting for round..."
+			topLabel.TextColor3 = Color3.fromRGB(200, 200, 200)
+		end
 
 	elseif state == "Countdown" then
-		topBar.Visible = true
-		topLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
-		startCountdown(seconds, function(t)
-			return "Round starts in " .. t .. "..."
-		end)
+		if not welcomeOpen then
+			topBar.Visible = true
+			topLabel.TextColor3 = Color3.fromRGB(255, 220, 80)
+			startCountdown(seconds, function(t)
+				return "Round starts in " .. t .. "..."
+			end)
+		end
 
 	elseif state == "Playing" then
 		topBar.Visible = true
@@ -197,7 +207,25 @@ RoundStateEvent.OnClientEvent:Connect(function(state, seconds)
 	elseif state == "Scoreboard" then
 		scoreboard.Visible = true
 	end
+end
+
+-- State handler
+RoundStateEvent.OnClientEvent:Connect(function(state, seconds)
+	currentState = state
+	phaseEndClientTime = os.clock() + seconds
+	applyState(state, seconds)
 end)
+
+-- When the welcome screen is dismissed, re-show the UI for the current phase
+local welcomeGui = playerGui:FindFirstChild("WelcomeScreen")
+if welcomeGui then
+	welcomeGui.AncestryChanged:Connect(function(_, newParent)
+		if newParent == nil and currentState then
+			local remaining = math.max(0, math.floor(phaseEndClientTime - os.clock()))
+			applyState(currentState, remaining)
+		end
+	end)
+end
 
 -- Populate scoreboard when results arrive (fires just before Scoreboard state)
 RoundResultsEvent.OnClientEvent:Connect(function(results)
