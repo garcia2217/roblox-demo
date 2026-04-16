@@ -258,8 +258,16 @@ local function pickRandomOreSpawns()
 	return picks
 end
 
-for _, entry in ipairs(pickRandomOreSpawns()) do
-	spawnOre(entry.position, entry.oreType)
+-- Clears all existing ores and spawns a fresh set.
+-- Called at the start of each Playing phase and to clean up during Scoreboard.
+local function resetOres(spawnFresh)
+	oreFolder:ClearAllChildren()
+	table.clear(oreHP)
+	if spawnFresh then
+		for _, entry in ipairs(pickRandomOreSpawns()) do
+			spawnOre(entry.position, entry.oreType)
+		end
+	end
 end
 
 -- Particle hit effect
