@@ -88,17 +88,28 @@ RunService.RenderStepped:Connect(function()
 	end
 end)
 
-UserInputService.InputBegan:Connect(function(input, gameProcessed)
-	if gameProcessed then return end
-	if input.UserInputType ~= Enum.UserInputType.MouseButton1 then return end
-
-	local mousePos = UserInputService:GetMouseLocation()
-	local ray = camera:ViewportPointToRay(mousePos.X, mousePos.Y)
+local function tryMineAtScreenPos(screenPos)
+	local ray = camera:ViewportPointToRay(screenPos.X, screenPos.Y)
 	local result = workspace:Raycast(ray.Origin, ray.Direction * 50, getRaycastParams())
 	if not result then return end
-
 	local hitPart = result.Instance
 	if not hitPart:GetAttribute("IsMineable") then return end
-
 	MineEvent:FireServer(hitPart)
+end
+
+UserInputService.InputBegan:Connect(function(input, gameProcessed)
+	if gameProcessed then return end
+
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		tryMineAtScreenPos(UserInputService:GetMouseLocation())
+	elseif input.UserInputType == Enum.UserInputType.Touch then
+		-- input.Position is a Vector3 where X, Y are screen coordinates
+		tryMineAtScreenPos(Vector2.new(input.Position.X, input.Position.Y))
+	elseif input.UserInputType == Enum.UserInputType.Gamepad1 then
+		-- R2 (trigger) or A button — aim at screen center
+		if input.KeyCode == Enum.KeyCode.ButtonR2 or input.KeyCode == Enum.KeyCode.ButtonA then
+			local viewport = camera.ViewportSize
+			tryMineAtScreenPos(Vector2.new(viewport.X / 2, viewport.Y / 2))
+		end
+	end
 end)
