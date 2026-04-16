@@ -1,7 +1,16 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local TweenService = game:GetService("TweenService")
+local SoundService = game:GetService("SoundService")
 local Config = require(ReplicatedStorage.Shared.Config)
 local OreTypes = require(ReplicatedStorage.Shared.OreTypes)
+
+-- Background music (parented to SoundService = non-positional, heard everywhere)
+local bgm = Instance.new("Sound")
+bgm.SoundId = Config.SOUNDS.BackgroundMusic
+bgm.Volume = Config.BGM_VOLUME
+bgm.Looped = true
+bgm.Parent = SoundService
+bgm:Play()
 
 local CoinSoundEvent = ReplicatedStorage.Events:WaitForChild("CoinSoundEvent")
 local FloatingCoinsEvent = ReplicatedStorage.Events:WaitForChild("FloatingCoinsEvent")

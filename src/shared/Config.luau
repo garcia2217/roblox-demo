@@ -21,6 +21,9 @@ Config.SOUNDS = {
 	OreHit   = "rbxassetid://9119713951", -- rock impact
 	OreBreak = "rbxassetid://104934835352245", -- rock crumble/break
 	CoinPickup = "rbxassetid://4590662766", -- coin chime
+	BackgroundMusic = "rbxassetid://85016458703950", -- dungeon/cave ambient loop
 }
+
+Config.BGM_VOLUME = 0.35
 
 return Config
