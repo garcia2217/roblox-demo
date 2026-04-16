@@ -85,7 +85,112 @@ local function spawnOre(position, oreType)
 	part.Parent = workspace
 end
 
-for _, entry in ipairs(Config.ORE_SPAWN_POSITIONS) do
+-- Weighted ore type pool: Stone 50%, Iron 33%, Gold 17%
+local ORE_TYPE_POOL = { "Stone", "Stone", "Stone", "Iron", "Iron", "Gold" }
+
+local function pickOreType()
+	return ORE_TYPE_POOL[math.random(1, #ORE_TYPE_POOL)]
+end
+
+-- Scans the workspace for valid ore spawn positions by:
+--   1. Using the SpawnLocation Y as the floor reference height
+--   2. Collecting XZ grid points from flat floor-level parts
+--   3. Raycasting downward at each point to get the TRUE surface Y (not estimated from Size)
+--   4. Casting 6 studs upward from the hit surface to reject low-headroom spots
+local function findOreSpawnCandidates()
+	local PLAYER_HEIGHT = 6   -- studs of clear space needed above the surface
+	local MIN_FLOOR_AREA = 50 -- minimum X*Z area (studs²) to consider as floor
+	local GRID_STEP = 10      -- studs between sample points
+	local EDGE_INSET = 2      -- studs inset from part edges to avoid rim spawns
+	local HEIGHT_TOLERANCE = 15 -- studs above/below SpawnLocation Y to accept
+
+	local spawnLocation = workspace:FindFirstChildWhichIsA("SpawnLocation", true)
+	local spawnY = spawnLocation and spawnLocation.Position.Y or 0
+
+	-- Step 1: collect unique XZ grid points from all floor-level parts
+	local gridPoints = {} -- keyed to deduplicate overlapping parts
+	for _, part in ipairs(workspace:GetDescendants()) do
+		if not part:IsA("BasePart") then continue end
+		if part:IsA("Terrain") then continue end
+		if part:IsA("SpawnLocation") then continue end
+		if not part.CanCollide then continue end
+
+		local sX, sY, sZ = part.Size.X, part.Size.Y, part.Size.Z
+		if sY >= sX / 2 or sY >= sZ / 2 then continue end
+		if (sX * sZ) < MIN_FLOOR_AREA then continue end
+
+		local topY = part.Position.Y + sY / 2
+		if math.abs(topY - spawnY) > HEIGHT_TOLERANCE then continue end
+
+		local halfX = sX / 2 - EDGE_INSET
+		local halfZ = sZ / 2 - EDGE_INSET
+		if halfX <= 0 or halfZ <= 0 then continue end
+
+		for dx = -halfX, halfX, GRID_STEP do
+			for dz = -halfZ, halfZ, GRID_STEP do
+				local x = math.floor(part.Position.X + dx)
+				local z = math.floor(part.Position.Z + dz)
+				gridPoints[x .. "_" .. z] = Vector2.new(x, z)
+			end
+		end
+	end
+
+	-- Step 2: raycast each XZ point from above to find the real surface Y
+	local candidates = {}
+	for _, pt in pairs(gridPoints) do
+		local x, z = pt.X, pt.Y
+		-- Cast from just above the expected floor zone downward
+		local hit = workspace:Raycast(
+			Vector3.new(x, spawnY + 50, z),
+			Vector3.new(0, -(HEIGHT_TOLERANCE + 55), 0)
+		)
+		if not hit then continue end
+
+		local surfaceY = hit.Position.Y
+		if math.abs(surfaceY - spawnY) > HEIGHT_TOLERANCE then continue end
+
+		-- Check headroom: nothing solid within PLAYER_HEIGHT studs above the surface
+		local headHit = workspace:Raycast(
+			Vector3.new(x, surfaceY + 0.5, z),
+			Vector3.new(0, PLAYER_HEIGHT, 0)
+		)
+		if not headHit then
+			table.insert(candidates, Vector3.new(x, surfaceY + 1, z))
+		end
+	end
+
+	return candidates
+end
+
+-- Cached at startup so respawns can also pick from the same pool
+local oreCandidates = findOreSpawnCandidates()
+
+if #oreCandidates == 0 then
+	warn("GameManager: findOreSpawnCandidates found no valid positions — no ores will spawn")
+end
+
+local function pickRandomPosition()
+	return oreCandidates[math.random(1, #oreCandidates)]
+end
+
+local function pickRandomOreSpawns()
+	if #oreCandidates == 0 then return {} end
+
+	-- Fisher-Yates shuffle on a copy, then take the first ORE_SPAWN_COUNT
+	local shuffled = { table.unpack(oreCandidates) }
+	for i = #shuffled, 2, -1 do
+		local j = math.random(1, i)
+		shuffled[i], shuffled[j] = shuffled[j], shuffled[i]
+	end
+
+	local picks = {}
+	for i = 1, math.min(Config.ORE_SPAWN_COUNT, #shuffled) do
+		table.insert(picks, { position = shuffled[i], oreType = pickOreType() })
+	end
+	return picks
+end
+
+for _, entry in ipairs(pickRandomOreSpawns()) do
 	spawnOre(entry.position, entry.oreType)
 end
 
@@ -171,5 +276,7 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	coins.Value = coins.Value + OreTypes[oreType].coins
 
 	-- Schedule respawn
-	task.delay(Config.RESPAWN_DELAY, spawnOre, position, oreType)
+	task.delay(Config.RESPAWN_DELAY, function()
+		spawnOre(pickRandomPosition(), oreType)
+	end)
 end)
