@@ -291,6 +291,7 @@ end
 
 -- MineEvent handler
 local lastMineTimes = {} -- [player.UserId] = os.clock() of last successful mine
+local roundCoins = {}   -- [player.UserId] = coins earned this round only; reset each round
 
 MineEvent.OnServerEvent:Connect(function(player, orePart)
 	-- Guard: part must still exist and be mineable
@@ -355,10 +356,11 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 
 	orePart:Destroy()
 
-	-- Award coins
+	-- Award coins (persistent leaderboard + round score)
 	local coinAmount = OreTypes[oreType].coins
 	local coins = player.leaderstats.Coins
 	coins.Value = coins.Value + coinAmount
+	roundCoins[player.UserId] = (roundCoins[player.UserId] or 0) + coinAmount
 
 	-- Notify clients: coin sound (mining player only) + floating text (everyone)
 	CoinSoundEvent:FireClient(player)
