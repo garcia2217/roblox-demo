@@ -27,13 +27,23 @@ local function saveData(player)
 	local coins = player.leaderstats and player.leaderstats:FindFirstChild("Coins")
 	if not coins then return end
 
-	local success, err = pcall(function()
-		playerDB:SetAsync("player_" .. player.UserId, coins.Value)
-	end)
-
-	if not success then
-		warn("Failed to save data for", player.Name, ":", err)
+	local key = "player_" .. player.UserId
+	local saved = false
+	for attempt = 1, 3 do
+		local success, err = pcall(function()
+			playerDB:SetAsync(key, coins.Value)
+		end)
+		if success then
+			saved = true
+			break
+		end
+		if attempt < 3 then
+			task.wait(2)
+		else
+			warn("Failed to save data for", player.Name, "after 3 attempts:", err)
+		end
 	end
+	return saved
 end
 
 local function loadData(player)
