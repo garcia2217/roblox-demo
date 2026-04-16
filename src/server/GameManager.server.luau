@@ -75,7 +75,7 @@ local function spawnOre(position, oreType)
 	part.Size = Vector3.new(2, 2, 2)
 	part.Anchored = true
 	part.BrickColor = data.color
-	part.Material = Enum.Material.SmoothPlastic
+	part.Material = data.material
 
 	part:SetAttribute("IsMineable", true)
 	part:SetAttribute("OreType", oreType)
@@ -86,7 +86,7 @@ local function spawnOre(position, oreType)
 end
 
 -- Weighted ore type pool: Stone 50%, Iron 33%, Gold 17%
-local ORE_TYPE_POOL = { "Stone", "Stone", "Stone", "Iron", "Iron", "Gold" }
+local ORE_TYPE_POOL = { "Stone", "Stone", "Stone", "Iron", "Iron", "Gold", "Gold", "Diamond" }
 
 local function pickOreType()
 	return ORE_TYPE_POOL[math.random(1, #ORE_TYPE_POOL)]

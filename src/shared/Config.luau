@@ -11,6 +11,6 @@ Config.RESPAWN_DELAY = 5      -- seconds before a mined ore respawns
 Config.AUTOSAVE_INTERVAL = 60 -- seconds between periodic saves
 
 -- How many ores to place at game start (server picks this many at random each run)
-Config.ORE_SPAWN_COUNT = 8
+Config.ORE_SPAWN_COUNT = 10
 
 return Config
