@@ -356,8 +356,9 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	CoinSoundEvent:FireClient(player)
 	FloatingCoinsEvent:FireAllClients(position, coinAmount, oreType)
 
-	-- Schedule respawn
+	-- Schedule respawn with a freshly rolled ore type so all types
+	-- remain in circulation regardless of the initial spawn draw
 	task.delay(Config.RESPAWN_DELAY, function()
-		spawnOre(pickRandomPosition(), oreType)
+		spawnOre(pickRandomPosition(), pickOreType())
 	end)
 end)
