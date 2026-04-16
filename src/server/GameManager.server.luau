@@ -210,8 +210,21 @@ local function pickRandomOreSpawns()
 	end
 
 	local picks = {}
-	for i = 1, math.min(Config.ORE_SPAWN_COUNT, #shuffled) do
-		table.insert(picks, { position = shuffled[i], oreType = pickOreType() })
+	for i = 1, #shuffled do
+		if #picks >= Config.ORE_SPAWN_COUNT then break end
+
+		local candidate = shuffled[i]
+		local tooClose = false
+		for _, pick in ipairs(picks) do
+			if (candidate - pick.position).Magnitude < Config.ORE_MIN_SPACING then
+				tooClose = true
+				break
+			end
+		end
+
+		if not tooClose then
+			table.insert(picks, { position = candidate, oreType = pickOreType() })
+		end
 	end
 	return picks
 end

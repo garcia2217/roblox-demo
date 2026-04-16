@@ -13,6 +13,9 @@ Config.AUTOSAVE_INTERVAL = 60 -- seconds between periodic saves
 -- How many ores to place at game start (server picks this many at random each run)
 Config.ORE_SPAWN_COUNT = 10
 
+-- Minimum studs between any two ore spawn positions
+Config.ORE_MIN_SPACING = 15
+
 -- Sound asset IDs (replace with your own from the Creator Marketplace if desired)
 Config.SOUNDS = {
 	OreHit   = "rbxassetid://9119713951", -- rock impact
