@@ -16,7 +16,7 @@ Config.ORE_SPAWN_COUNT = 10
 -- Round session timing (seconds)
 Config.LOBBY_DURATION      = 10
 Config.COUNTDOWN_DURATION  = 5
-Config.ROUND_DURATION      = 180
+Config.ROUND_DURATION      = 60
 Config.SCOREBOARD_DURATION = 10
 
 -- Minimum studs between any two ore spawn positions
