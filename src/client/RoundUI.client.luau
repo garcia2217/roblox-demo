@@ -45,13 +45,31 @@ scoreboard.Parent = screenGui
 Instance.new("UICorner", scoreboard).CornerRadius = UDim.new(0, 12)
 
 local scoreTitle = Instance.new("TextLabel")
-scoreTitle.Size = UDim2.new(1, 0, 0, 55)
+scoreTitle.Size = UDim2.new(1, -50, 0, 55)
 scoreTitle.BackgroundTransparency = 1
 scoreTitle.TextColor3 = Color3.fromRGB(255, 200, 0)
 scoreTitle.TextScaled = true
 scoreTitle.Font = Enum.Font.GothamBold
 scoreTitle.Text = "Round Over!"
 scoreTitle.Parent = scoreboard
+
+-- Close button (top-right corner of scoreboard)
+local closeButton = Instance.new("TextButton")
+closeButton.Size = UDim2.new(0, 36, 0, 36)
+closeButton.Position = UDim2.new(1, -44, 0, 10)
+closeButton.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+closeButton.BackgroundTransparency = 0.3
+closeButton.BorderSizePixel = 0
+closeButton.TextColor3 = Color3.new(1, 1, 1)
+closeButton.TextScaled = true
+closeButton.Font = Enum.Font.GothamBold
+closeButton.Text = "X"
+closeButton.Parent = scoreboard
+Instance.new("UICorner", closeButton).CornerRadius = UDim.new(0, 6)
+
+closeButton.MouseButton1Click:Connect(function()
+	scoreboard.Visible = false
+end)
 
 -- Scrollable list for ranked rows
 local scoreList = Instance.new("Frame")
