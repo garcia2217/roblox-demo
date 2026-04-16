@@ -300,7 +300,6 @@ end
 -- MineEvent handler
 local gameState = "Lobby" -- authoritative game state; mining is only allowed during "Playing"
 local lastMineTimes = {} -- [player.UserId] = os.clock() of last successful mine
-local roundCoins = {}   -- [player.UserId] = coins earned this round only; reset each round
 
 MineEvent.OnServerEvent:Connect(function(player, orePart)
 	-- Guard: mining only allowed during active round
@@ -368,11 +367,10 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 
 	orePart:Destroy()
 
-	-- Award coins (persistent leaderboard + round score)
+	-- Award coins
 	local coinAmount = OreTypes[oreType].coins
 	local coins = player.leaderstats.Coins
 	coins.Value = coins.Value + coinAmount
-	roundCoins[player.UserId] = (roundCoins[player.UserId] or 0) + coinAmount
 
 	-- Notify clients: coin sound (mining player only) + floating text (everyone)
 	CoinSoundEvent:FireClient(player)
@@ -413,18 +411,22 @@ task.spawn(function()
 		setGameState("Countdown", Config.COUNTDOWN_DURATION)
 		task.wait(Config.COUNTDOWN_DURATION)
 
-		-- Playing
-		roundCoins = {}
+		-- Playing: reset all players' coins to 0 for the new round
+		for _, player in ipairs(Players:GetPlayers()) do
+			local coins = player.leaderstats and player.leaderstats:FindFirstChild("Coins")
+			if coins then coins.Value = 0 end
+		end
 		resetOres(true)
 		setGameState("Playing", Config.ROUND_DURATION)
 		task.wait(Config.ROUND_DURATION)
 
-		-- Scoreboard: build ranked results then show them
+		-- Scoreboard: build ranked results from current leaderstats
 		local results = {}
 		for _, player in ipairs(Players:GetPlayers()) do
+			local coins = player.leaderstats and player.leaderstats:FindFirstChild("Coins")
 			table.insert(results, {
-				name   = player.Name,
-				coins  = roundCoins[player.UserId] or 0,
+				name  = player.Name,
+				coins = coins and coins.Value or 0,
 			})
 		end
 		table.sort(results, function(a, b) return a.coins > b.coins end)
