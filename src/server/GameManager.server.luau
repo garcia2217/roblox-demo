@@ -381,6 +381,56 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	-- Schedule respawn with a freshly rolled ore type so all types
 	-- remain in circulation regardless of the initial spawn draw
 	task.delay(Config.RESPAWN_DELAY, function()
-		spawnOre(pickRandomPosition(), pickOreType())
+		if gameState == "Playing" then
+			spawnOre(pickRandomPosition(), pickOreType())
+		end
 	end)
+end)
+
+-- Round loop ----------------------------------------------------------------
+
+local phaseEndTime = 0 -- os.clock() when current phase ends; used for late-joiner sync
+
+local function setGameState(state, duration)
+	gameState = state
+	phaseEndTime = os.clock() + duration
+	RoundStateEvent:FireAllClients(state, duration)
+end
+
+-- Fire current state to players who join mid-round so their UI is correct
+Players.PlayerAdded:Connect(function(player)
+	local remaining = math.max(0, math.floor(phaseEndTime - os.clock()))
+	RoundStateEvent:FireClient(player, gameState, remaining)
+end)
+
+task.spawn(function()
+	while true do
+		-- Lobby
+		setGameState("Lobby", Config.LOBBY_DURATION)
+		task.wait(Config.LOBBY_DURATION)
+
+		-- Countdown
+		setGameState("Countdown", Config.COUNTDOWN_DURATION)
+		task.wait(Config.COUNTDOWN_DURATION)
+
+		-- Playing
+		roundCoins = {}
+		resetOres(true)
+		setGameState("Playing", Config.ROUND_DURATION)
+		task.wait(Config.ROUND_DURATION)
+
+		-- Scoreboard: build ranked results then show them
+		local results = {}
+		for _, player in ipairs(Players:GetPlayers()) do
+			table.insert(results, {
+				name   = player.Name,
+				coins  = roundCoins[player.UserId] or 0,
+			})
+		end
+		table.sort(results, function(a, b) return a.coins > b.coins end)
+		RoundResultsEvent:FireAllClients(results)
+		resetOres(false)
+		setGameState("Scoreboard", Config.SCOREBOARD_DURATION)
+		task.wait(Config.SCOREBOARD_DURATION)
+	end
 end)
