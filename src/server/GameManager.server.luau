@@ -111,8 +111,13 @@ local function spawnOre(position, oreType)
 	part.Parent = oreFolder
 end
 
--- Weighted ore type pool: Stone 50%, Iron 33%, Gold 17%
-local ORE_TYPE_POOL = { "Stone", "Stone", "Stone", "Iron", "Iron", "Gold", "Gold", "Diamond" }
+-- Build a weighted pool from OreTypes.weight at startup
+local ORE_TYPE_POOL = {}
+for oreType, data in pairs(OreTypes) do
+	for _ = 1, data.weight do
+		table.insert(ORE_TYPE_POOL, oreType)
+	end
+end
 
 local function pickOreType()
 	return ORE_TYPE_POOL[math.random(1, #ORE_TYPE_POOL)]

@@ -5,6 +5,7 @@ local OreTypes = {
 		material = Enum.Material.Granite,
 		hp       = 2,
 		coins    = 1,
+		weight   = 5,
 	},
 	Iron = {
 		name     = "Iron",
@@ -12,6 +13,7 @@ local OreTypes = {
 		material = Enum.Material.SmoothPlastic,
 		hp       = 3,
 		coins    = 3,
+		weight   = 3,
 	},
 	Gold = {
 		name     = "Gold",
@@ -19,6 +21,7 @@ local OreTypes = {
 		material = Enum.Material.Neon,
 		hp       = 5,
 		coins    = 8,
+		weight   = 2,
 	},
 	Diamond = {
 		name     = "Diamond",
@@ -26,6 +29,7 @@ local OreTypes = {
 		material = Enum.Material.Neon,
 		hp       = 8,
 		coins    = 20,
+		weight   = 1,
 	},
 }
 
