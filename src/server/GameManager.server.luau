@@ -290,10 +290,14 @@ local function emitHitParticles(orePart, oreType)
 end
 
 -- MineEvent handler
+local gameState = "Lobby" -- authoritative game state; mining is only allowed during "Playing"
 local lastMineTimes = {} -- [player.UserId] = os.clock() of last successful mine
 local roundCoins = {}   -- [player.UserId] = coins earned this round only; reset each round
 
 MineEvent.OnServerEvent:Connect(function(player, orePart)
+	-- Guard: mining only allowed during active round
+	if gameState ~= "Playing" then return end
+
 	-- Guard: part must still exist and be mineable
 	if not orePart or not orePart.Parent then return end
 	if not orePart:GetAttribute("IsMineable") then return end
