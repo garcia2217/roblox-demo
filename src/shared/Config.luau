@@ -13,6 +13,12 @@ Config.AUTOSAVE_INTERVAL = 60 -- seconds between periodic saves
 -- How many ores to place at game start (server picks this many at random each run)
 Config.ORE_SPAWN_COUNT = 10
 
+-- Round session timing (seconds)
+Config.LOBBY_DURATION      = 10
+Config.COUNTDOWN_DURATION  = 5
+Config.ROUND_DURATION      = 180
+Config.SCOREBOARD_DURATION = 10
+
 -- Minimum studs between any two ore spawn positions
 Config.ORE_MIN_SPACING = 15
 
