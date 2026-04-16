@@ -102,6 +102,10 @@ local oreFolder = Instance.new("Folder")
 oreFolder.Name = "Ores"
 oreFolder.Parent = workspace
 
+-- Server-authoritative HP store — keyed by ore part to avoid race conditions
+-- when two players hit the same ore in the same frame
+local oreHP = {}
+
 -- Ore spawning
 local function spawnOre(position, oreType)
 	local data = OreTypes[oreType]
@@ -116,6 +120,8 @@ local function spawnOre(position, oreType)
 	part:SetAttribute("IsMineable", true)
 	part:SetAttribute("OreType", oreType)
 	part:SetAttribute("HP", data.hp)
+
+	oreHP[part] = data.hp
 
 	part.Position = position
 	part.Parent = oreFolder
@@ -299,9 +305,15 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	if (now - lastMine) < Config.MINE_COOLDOWN then return end
 	lastMineTimes[player.UserId] = now
 
-	-- Apply damage
+	-- Apply damage (read from server table, not the replicated attribute)
 	local oreType = orePart:GetAttribute("OreType")
-	local hp = orePart:GetAttribute("HP") - 1
+	local hp = oreHP[orePart]
+	if not hp then return end -- already broken by another player this frame
+	hp = hp - 1
+	oreHP[orePart] = hp
+
+	-- Keep attribute in sync so clients can read it (tooltip HP display)
+	orePart:SetAttribute("HP", hp)
 
 	-- Hit effects
 	emitHitParticles(orePart, oreType)
@@ -315,13 +327,13 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	end)
 
 	if hp > 0 then
-		orePart:SetAttribute("HP", hp)
 		-- HP transparency: gets more transparent as ore weakens
 		orePart.Transparency = (1 - hp / OreTypes[oreType].hp) * 0.5
 		return
 	end
 
 	-- HP reached 0 — break the ore
+	oreHP[orePart] = nil
 	local position = orePart.Position
 
 	-- Play break sound at the ore's position before destroying it
