@@ -87,6 +87,11 @@ local function playWorldSound(soundId, parent, volume)
 	Debris:AddItem(sound, 5)
 end
 
+-- Ore folder keeps Workspace Explorer tidy
+local oreFolder = Instance.new("Folder")
+oreFolder.Name = "Ores"
+oreFolder.Parent = workspace
+
 -- Ore spawning
 local function spawnOre(position, oreType)
 	local data = OreTypes[oreType]
@@ -103,7 +108,7 @@ local function spawnOre(position, oreType)
 	part:SetAttribute("HP", data.hp)
 
 	part.Position = position
-	part.Parent = workspace
+	part.Parent = oreFolder
 end
 
 -- Weighted ore type pool: Stone 50%, Iron 33%, Gold 17%
