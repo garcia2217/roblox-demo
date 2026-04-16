@@ -9,18 +9,14 @@ screenGui.Name = "WelcomeScreen"
 screenGui.ResetOnSpawn = false  -- only show once per session, not on every respawn
 screenGui.Parent = playerGui
 
--- Dark overlay
-local overlay = Instance.new("Frame")
-overlay.Size = UDim2.new(1, 0, 1, 0)
-overlay.BackgroundColor3 = Color3.new(0, 0, 0)
-overlay.BackgroundTransparency = 0.45
-overlay.BorderSizePixel = 0
-overlay.Parent = screenGui
-
 -- Center panel
 local panel = Instance.new("Frame")
-panel.Size = UDim2.new(0, 420, 0, 340)
-panel.Position = UDim2.new(0.5, -210, 0.5, -170)
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+panel.Size = UDim2.new(0.85, 0, 0, 300)
+panel.Position = UDim2.new(0.5, 0, 0.5, 0)
+local panelConstraint = Instance.new("UISizeConstraint")
+panelConstraint.MaxSize = Vector2.new(420, 300)
+panelConstraint.Parent = panel
 panel.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
 panel.BackgroundTransparency = 0.1
 panel.BorderSizePixel = 0
@@ -58,8 +54,8 @@ local instructions = {
 
 for i, line in ipairs(instructions) do
 	local row = Instance.new("TextLabel")
-	row.Size = UDim2.new(1, -40, 0, 30)
-	row.Position = UDim2.new(0, 20, 0, 74 + i * 34)
+	row.Size = UDim2.new(1, -40, 0, 26)
+	row.Position = UDim2.new(0, 20, 0, 74 + i * 28)
 	row.BackgroundTransparency = 1
 	row.TextColor3 = Color3.fromRGB(220, 220, 220)
 	row.TextScaled = true
@@ -72,7 +68,7 @@ end
 -- "Got it!" button
 local button = Instance.new("TextButton")
 button.Size = UDim2.new(0, 160, 0, 44)
-button.Position = UDim2.new(0.5, -80, 1, -60)
+button.Position = UDim2.new(0.5, -80, 1, -52)
 button.BackgroundColor3 = Color3.fromRGB(255, 200, 0)
 button.BorderSizePixel = 0
 button.TextColor3 = Color3.fromRGB(20, 20, 20)

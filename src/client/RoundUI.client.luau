@@ -15,14 +15,18 @@ screenGui.Parent = playerGui
 
 -- Top status bar — shared by Lobby label and timer
 local topBar = Instance.new("Frame")
-topBar.Size = UDim2.new(0, 320, 0, 50)
-topBar.Position = UDim2.new(0.5, -160, 0, 20)
+topBar.AnchorPoint = Vector2.new(0.5, 0)
+topBar.Size = UDim2.new(0.75, 0, 0, 44)
+topBar.Position = UDim2.new(0.5, 0, 0, 18)
 topBar.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 topBar.BackgroundTransparency = 0.45
 topBar.BorderSizePixel = 0
 topBar.Visible = false
 topBar.Parent = screenGui
 Instance.new("UICorner", topBar).CornerRadius = UDim.new(0, 8)
+local topBarConstraint = Instance.new("UISizeConstraint")
+topBarConstraint.MaxSize = Vector2.new(340, 44)
+topBarConstraint.Parent = topBar
 
 local topLabel = Instance.new("TextLabel")
 topLabel.Size = UDim2.new(1, -16, 1, 0)
@@ -35,17 +39,21 @@ topLabel.Parent = topBar
 
 -- Scoreboard overlay — visible only during Scoreboard phase
 local scoreboard = Instance.new("Frame")
-scoreboard.Size = UDim2.new(0, 420, 0, 320)
-scoreboard.Position = UDim2.new(0.5, -210, 0.5, -160)
+scoreboard.AnchorPoint = Vector2.new(0.5, 0.5)
+scoreboard.Size = UDim2.new(0.85, 0, 0, 260)
+scoreboard.Position = UDim2.new(0.5, 0, 0.5, 0)
 scoreboard.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
 scoreboard.BackgroundTransparency = 0.2
 scoreboard.BorderSizePixel = 0
 scoreboard.Visible = false
 scoreboard.Parent = screenGui
 Instance.new("UICorner", scoreboard).CornerRadius = UDim.new(0, 12)
+local scoreConstraint = Instance.new("UISizeConstraint")
+scoreConstraint.MaxSize = Vector2.new(420, 260)
+scoreConstraint.Parent = scoreboard
 
 local scoreTitle = Instance.new("TextLabel")
-scoreTitle.Size = UDim2.new(1, -50, 0, 55)
+scoreTitle.Size = UDim2.new(1, -50, 0, 46)
 scoreTitle.BackgroundTransparency = 1
 scoreTitle.TextColor3 = Color3.fromRGB(255, 200, 0)
 scoreTitle.TextScaled = true
@@ -73,8 +81,8 @@ end)
 
 -- Scrollable list for ranked rows
 local scoreList = Instance.new("Frame")
-scoreList.Size = UDim2.new(1, -40, 1, -70)
-scoreList.Position = UDim2.new(0, 20, 0, 60)
+scoreList.Size = UDim2.new(1, -40, 1, -58)
+scoreList.Position = UDim2.new(0, 20, 0, 52)
 scoreList.BackgroundTransparency = 1
 scoreList.Parent = scoreboard
 
@@ -119,7 +127,7 @@ local function populateScoreboard(results)
 
 	for i, entry in ipairs(results) do
 		local row = Instance.new("Frame")
-		row.Size = UDim2.new(1, 0, 0, 36)
+		row.Size = UDim2.new(1, 0, 0, 30)
 		row.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 		row.BackgroundTransparency = i == 1 and 0.7 or 0.88
 		row.BorderSizePixel = 0
