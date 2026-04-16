@@ -89,6 +89,33 @@ for _, entry in ipairs(Config.ORE_SPAWN_POSITIONS) do
 	spawnOre(entry.position, entry.oreType)
 end
 
+-- Particle hit effect
+local function emitHitParticles(orePart, oreType)
+	local data = OreTypes[oreType]
+
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Color = ColorSequence.new(data.color.Color)
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, 0.3),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	emitter.Speed = NumberRange.new(5, 15)
+	emitter.SpreadAngle = Vector2.new(60, 60)
+	emitter.Lifetime = NumberRange.new(0.3, 0.7)
+	emitter.LightEmission = 0.3
+	emitter.Rotation = NumberRange.new(0, 360)
+	emitter.Rate = 0
+	emitter.Parent = orePart
+
+	emitter:Emit(10)
+
+	task.delay(1, function()
+		if emitter and emitter.Parent then
+			emitter:Destroy()
+		end
+	end)
+end
+
 -- MineEvent handler
 local lastMineTimes = {} -- [player.UserId] = os.clock() of last successful mine
 
@@ -117,7 +144,8 @@ MineEvent.OnServerEvent:Connect(function(player, orePart)
 	local oreType = orePart:GetAttribute("OreType")
 	local hp = orePart:GetAttribute("HP") - 1
 
-	-- Hit flash
+	-- Hit effects
+	emitHitParticles(orePart, oreType)
 	local originalColor = orePart.BrickColor
 	orePart.BrickColor = BrickColor.new("White")
 	task.delay(0.1, function()
